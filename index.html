@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Aghil Worker</title>
+
+  <meta
+    name="description"
+    content="Aghil Worker - AI Worker Dashboard"
+  >
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <header class="topbar">
+    <div>
+      <div class="brand">⚡ Aghil Worker</div>
+      <div class="subtitle">Autonomous AI Worker</div>
+    </div>
+
+    <div class="status">
+      <span class="status-dot"></span>
+      Online
+    </div>
+  </header>
+
+
+  <main class="container">
+
+    <section class="hero">
+      <div>
+        <span class="badge">AI WORKER v1.0</span>
+
+        <h1>
+          دستیار هوشمند
+          <span>عقیل</span>
+        </h1>
+
+        <p>
+          یک مرکز کنترل ساده برای مدیریت هوش مصنوعی،
+          حافظه، ابزارها و اتصال‌های آینده.
+        </p>
+      </div>
+
+      <div class="hero-icon">
+        🤖
+      </div>
+    </section>
+
+
+    <section class="stats">
+
+      <div class="stat-card">
+        <span>🧠</span>
+        <strong id="memoryCount">0</strong>
+        <small>Memory</small>
+      </div>
+
+      <div class="stat-card">
+        <span>🛠️</span>
+        <strong id="toolCount">4</strong>
+        <small>Tools</small>
+      </div>
+
+      <div class="stat-card">
+        <span>💬</span>
+        <strong id="messageCount">0</strong>
+        <small>Messages</small>
+      </div>
+
+      <div class="stat-card">
+        <span>📱</span>
+        <strong>Ready</strong>
+        <small>WhatsApp</small>
+      </div>
+
+    </section>
+
+
+    <section class="grid">
+
+      <div class="panel">
+
+        <div class="panel-title">
+          <span>⚙️</span>
+          تنظیمات Worker
+        </div>
+
+        <label>
+          نام Worker
+        </label>
+
+        <input
+          id="workerName"
+          type="text"
+          placeholder="Aghil Worker"
+          value="Aghil Worker"
+        >
+
+        <label>
+          مأموریت
+        </label>
+
+        <textarea
+          id="workerMission"
+          rows="4"
+          placeholder="مأموریت Worker را بنویس..."
+        >مدیریت سفارش‌ها و پاسخ‌گویی هوشمند به مشتریان</textarea>
+
+        <label>
+          شخصیت
+        </label>
+
+        <select id="personality">
+          <option value="friendly">دوستانه</option>
+          <option value="professional">حرفه‌ای</option>
+          <option value="short">کوتاه و سریع</option>
+          <option value="smart">هوشمند و تحلیلی</option>
+        </select>
+
+        <button
+          class="primary"
+          onclick="saveWorkerSettings()"
+        >
+          💾 ذخیره تنظیمات
+        </button>
+
+      </div>
+
+
+      <div class="panel">
+
+        <div class="panel-title">
+          <span>🛠️</span>
+          ابزارها
+        </div>
+
+        <div class="tool">
+          <div>
+            <b>📱 WhatsApp</b>
+            <small>اتصال WhatsApp API</small>
+          </div>
+
+          <label class="switch">
+            <input
+              type="checkbox"
+              id="whatsappTool"
+              onchange="toggleTool('whatsapp')"
+            >
+            <span></span>
+          </label>
+        </div>
+
+
+        <div class="tool">
+          <div>
+            <b>🌐 Web</b>
+            <small>جست‌وجوی اینترنتی</small>
+          </div>
+
+          <label class="switch">
+            <input
+              type="checkbox"
+              id="webTool"
+              onchange="toggleTool('web')"
+            >
+            <span></span>
+          </label>
+        </div>
+
+
+        <div class="tool">
+          <div>
+            <b>🐙 GitHub</b>
+            <small>مدیریت پروژه‌ها</small>
+          </div>
+
+          <label class="switch">
+            <input
+              type="checkbox"
+              id="githubTool"
+              onchange="toggleTool('github')"
+            >
+            <span></span>
+          </label>
+        </div>
+
+
+        <div class="tool">
+          <div>
+            <b>🧠 Memory</b>
+            <small>حافظه Worker</small>
+          </div>
+
+          <label class="switch">
+            <input
+              type="checkbox"
+              id="memoryTool"
+              checked
+              onchange="toggleTool('memory')"
+            >
+            <span></span>
+          </label>
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <section class="panel chat-panel">
+
+      <div class="panel-title">
+        <span>💬</span>
+        گفت‌وگو با Worker
+      </div>
+
+      <div
+        id="chat"
+        class="chat"
+      >
+
+        <div class="message bot">
+          <div class="avatar">🤖</div>
+
+          <div class="bubble">
+            سلام عقیل 🌷<br>
+            من Aghil Worker هستم.
+            آماده‌ام دستوراتت را دریافت کنم.
+          </div>
+        </div>
+
+      </div>
+
+
+      <div class="chat-input">
+
+        <input
+          id="messageInput"
+          type="text"
+          placeholder="پیامت را بنویس..."
+          onkeydown="handleEnter(event)"
+        >
+
+        <button onclick="sendMessage()">
+          ➤
+        </button>
+
+      </div>
+
+    </section>
+
+
+    <section class="grid">
+
+      <div class="panel">
+
+        <div class="panel-title">
+          <span>🧠</span>
+          حافظه Worker
+        </div>
+
+        <div id="memoryList" class="memory-list">
+          <div class="empty">
+            هنوز چیزی ذخیره نشده است.
+          </div>
+        </div>
+
+        <button
+          class="danger"
+          onclick="clearMemory()"
+        >
+          🗑️ پاک کردن حافظه
+        </button>
+
+      </div>
+
+
+      <div class="panel">
+
+        <div class="panel-title">
+          <span>📱</span>
+          WhatsApp
+        </div>
+
+        <div class="connection-card">
+
+          <div class="big-icon">
+            📱
+          </div>
+
+          <h3>
+            WhatsApp Cloud API
+          </h3>
+
+          <p>
+            اتصال در نسخه بعدی فعال می‌شود.
+          </p>
+
+          <span class="coming">
+            آماده اتصال
+          </span>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <section class="panel activity">
+
+      <div class="panel-title">
+        <span>📋</span>
+        Activity Log
+      </div>
+
+      <div id="logs">
+        <div class="log">
+          <span>●</span>
+          Worker initialized
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <footer>
+    Aghil Worker v1.0 • Built for Acode 📱
+  </footer>
+
+
+  <script src="config.js"></script>
+  <script src="memory.js"></script>
+  <script src="app.js"></script>
+
+</body>
+</html>
