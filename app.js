@@ -29,6 +29,8 @@ async function loadSupabaseData() {
   try {
     const data = await loadSupabaseStore();
 
+    addLog("Checking Supabase store data");
+
     if (data.settings) {
       const mission = document.getElementById("workerMission");
       if (mission && !localStorage.getItem("aghil_worker_settings")) {
