@@ -75,7 +75,7 @@ export default {
 
         const message =
           typeof body.message === "string"
-            ? body.message.trim()
+            ? body.message.trim().slice(0, 4000)
             : "";
 
         if (!message) {
