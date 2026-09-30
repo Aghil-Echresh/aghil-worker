@@ -13,6 +13,8 @@ document.addEventListener(
 
     renderMemory();
 
+    loadSupabaseData();
+
     updateStats();
 
     addLog(
@@ -21,6 +23,38 @@ document.addEventListener(
 
   }
 );
+
+
+async function loadSupabaseData() {
+  try {
+    const data = await loadSupabaseStore();
+
+    if (data.settings) {
+      const mission = document.getElementById("workerMission");
+      if (mission && !localStorage.getItem("aghil_worker_settings")) {
+        mission.value = "مدیریت سفارش‌ها و پاسخ‌گویی هوشمند به مشتریان";
+      }
+
+      addLog("Supabase connected");
+    }
+
+    const toolCount = document.getElementById("toolCount");
+    if (toolCount) {
+      toolCount.textContent = data.productCount;
+      toolCount.parentElement.querySelector("small").textContent = "Products";
+    }
+
+    const status = document.querySelector(".status");
+    if (status) {
+      status.title = data.settings
+        ? "Supabase connected"
+        : "Supabase connected, store settings not found";
+    }
+  } catch (error) {
+    console.error("Supabase:", error);
+    addLog("Supabase connection failed");
+  }
+}
 
 
 /* =========================
