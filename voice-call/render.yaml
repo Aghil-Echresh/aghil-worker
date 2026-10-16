@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: aghil-email-voice-call
+    runtime: node
+    rootDir: voice-call
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    plan: free
