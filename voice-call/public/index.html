@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#123b35">
+<title>تماس صوتی با ایمیل | عقیل</title>
+<style>
+:root{font-family:Tahoma,Arial,sans-serif;color:#17332f;background:#f1f6f4}*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:18px}.app{width:min(100%,520px);background:white;border:1px solid #dce9e4;border-radius:24px;padding:24px;box-shadow:0 18px 55px #153b3020}h1{margin:0 0 8px;font-size:25px}.sub{color:#607873;line-height:1.9;font-size:14px}.field{display:block;font-size:14px;font-weight:bold;margin:18px 0 7px}input{width:100%;padding:14px;border:1px solid #cbdcd6;border-radius:12px;font:inherit;direction:ltr;text-align:left}button{font:inherit;border:0;border-radius:12px;padding:13px 16px;cursor:pointer;font-weight:bold}.row{display:flex;gap:9px;margin-top:12px}.row button{flex:1}.primary{background:#176b55;color:white}.secondary{background:#e5f1ed;color:#164a3d}.danger{background:#b63838;color:white}.status{margin-top:16px;padding:12px;border-radius:12px;background:#f0f5f3;line-height:1.8;font-size:14px;overflow-wrap:anywhere}.people{font-size:13px;color:#607873;margin-top:12px;line-height:1.8}.hidden{display:none!important}.incoming{background:#fff4d8;padding:12px;border-radius:12px;margin-top:14px;line-height:1.8}.note{font-size:12px;color:#7b6250;line-height:1.8;margin-top:18px;border-top:1px solid #e8eeeb;padding-top:14px}audio{width:100%;margin-top:10px}
+</style>
+</head>
+<body>
+<main class="app">
+<h1>📞 تماس صوتی با ایمیل</h1>
+<div class="sub">نسخهٔ آزمایشی تماس اینترنتی. هر دو نفر باید این صفحه را باز کنند و با ایمیل خود آنلاین شوند.</div>
+<label class="field" for="myEmail">ایمیل شما</label>
+<input id="myEmail" type="email" autocomplete="email" placeholder="you@example.com">
+<button id="register" class="primary" style="width:100%;margin-top:10px">ورود و آنلاین‌شدن</button>
+<label class="field" for="peerEmail">ایمیل مخاطب</label>
+<input id="peerEmail" type="email" placeholder="friend@example.com">
+<div class="row"><button id="call" class="primary" disabled>📞 تماس</button><button id="hangup" class="danger" disabled>پایان تماس</button></div>
+<div id="incoming" class="incoming hidden">تماس ورودی از <b id="caller"></b><div class="row"><button id="accept" class="primary">پاسخ</button><button id="reject" class="secondary">رد تماس</button></div></div>
+<audio id="remoteAudio" autoplay playsinline></audio>
+<div id="status" class="status" role="status">برای شروع، ایمیلت را ثبت کن.</div>
+<div id="people" class="people">کاربران آنلاین: هنوز مشخص نیست</div>
+<div class="note">⚠️ این نسخه برای آزمایش اولیه است؛ ایمیل فقط شناسه است و هنوز با کد ایمیلی تأیید نمی‌شود. برای استفادهٔ واقعی باید احراز هویت، محدودسازی درخواست‌ها و سرور TURN تنظیم شود. تماس ممکن است در بعضی شبکه‌ها بدون TURN وصل نشود. از اطلاعات حساس برای آزمایش استفاده نکن.</div>
+</main>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+(() => {
+ const $ = id => document.getElementById(id);
+ const socket = io({transports:["websocket","polling"]});
+ let myEmail="", peerEmail="", pc=null, localStream=null, pendingCaller="";
+ const rtcConfig={iceServers:[{urls:"stun:stun.l.google.com:19302"}]};
+ function status(text){$("status").textContent=text}
+ function enableCall(on){$("call").disabled=!on}
+ async function cleanup(notify=true){
+   if(notify && peerEmail) socket.emit("call:end",{to:peerEmail});
+   if(pc){pc.close();pc=null}
+   if(localStream){localStream.getTracks().forEach(t=>t.stop());localStream=null}
+   $("remoteAudio").srcObject=null;$("hangup").disabled=true;
+ }
+ async function makePeer(target){
+   peerEmail=target;
+   pc=new RTCPeerConnection(rtcConfig);
+   pc.onicecandidate=e=>{if(e.candidate)socket.emit("webrtc:ice",{to:peerEmail,candidate:e.candidate})};
+   pc.ontrack=e=>{$("remoteAudio").srcObject=e.streams[0];$("remoteAudio").play().catch(()=>{})};
+   pc.onconnectionstatechange=()=>{if(pc && ["failed","disconnected","closed"].includes(pc.connectionState)){status("اتصال قطع شد یا برقرار نشد.");}};
+   localStream=await navigator.mediaDevices.getUserMedia({audio:true,video:false});
+   localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
+   $("hangup").disabled=false;
+ }
+ $("register").onclick=()=>{
+   const email=$("myEmail").value.trim().toLowerCase();
+   if(!email || !email.includes("@"))return status("ایمیل معتبر وارد کن.");
+   socket.emit("register",{email},result=>{
+     if(!result.ok)return status(result.error||"ورود انجام نشد.");
+     myEmail=result.email;enableCall(true);$("register").disabled=true;$("myEmail").disabled=true;
+     status("آنلاین شدی: "+myEmail+" | حالا ایمیل مخاطب را وارد کن.");
+   });
+ };
+ $("call").onclick=()=>{
+   const to=$("peerEmail").value.trim().toLowerCase();
+   if(!to || !to.includes("@"))return status("ایمیل مخاطب را درست وارد کن.");
+   peerEmail=to;socket.emit("call:request",{to});
+ };
+ $("hangup").onclick=async()=>{await cleanup(true);status("تماس پایان یافت.")};
+ $("accept").onclick=async()=>{
+   $("incoming").classList.add("hidden");
+   try{
+     await makePeer(pendingCaller);
+     socket.emit("call:accept",{from:pendingCaller});
+     const offer=await pc.createOffer();await pc.setLocalDescription(offer);
+     socket.emit("webrtc:offer",{to:pendingCaller,description:pc.localDescription});
+     status("در حال برقراری تماس با "+pendingCaller);
+   }catch(e){await cleanup(false);status("دسترسی میکروفون لازم است. صفحه را با HTTPS باز کن و اجازهٔ میکروفون بده.");}
+ };
+ $("reject").onclick=()=>{socket.emit("call:reject",{from:pendingCaller});$("incoming").classList.add("hidden");status("تماس رد شد.")};
+ socket.on("server:status",()=>{});
+ socket.on("registered",d=>{myEmail=d.email});
+ socket.on("presence",d=>{$("people").textContent="کاربران آنلاین: "+(d.online.length?d.online.join("، "):"هیچ‌کس")});
+ socket.on("call:ringing",d=>status("در حال زنگ‌زدن به "+d.to+" ..."));
+ socket.on("call:incoming",d=>{pendingCaller=d.from;$("caller").textContent=d.from;$("incoming").classList.remove("hidden");status("تماس ورودی از "+d.from)});
+ socket.on("call:accepted",()=>status("تماس پذیرفته شد؛ در حال اتصال صدا..."));
+ socket.on("call:rejected",()=>{status("مخاطب تماس را رد کرد.");cleanup(false)});
+ socket.on("call:error",d=>status(d.message||"خطای تماس"));
+ socket.on("call:ended",async()=>{await cleanup(false);status("مخاطب تماس را پایان داد.")});
+ socket.on("webrtc:offer",async d=>{
+   try{
+     if(!pc)await makePeer(d.from);
+     await pc.setRemoteDescription(new RTCSessionDescription(d.description));
+     const answer=await pc.createAnswer();await pc.setLocalDescription(answer);
+     socket.emit("webrtc:answer",{to:d.from,description:pc.localDescription});
+     status("تماس برقرار شد. صحبت کن 🎙️");
+   }catch(e){await cleanup(false);status("برقراری صدا ناموفق بود؛ مجوز میکروفون و اتصال شبکه را بررسی کن.")}
+ });
+ socket.on("webrtc:answer",async d=>{try{if(pc)await pc.setRemoteDescription(new RTCSessionDescription(d.description));status("تماس برقرار شد. صحبت کن 🎙️")}catch(e){status("پاسخ تماس دریافت نشد.")}});
+ socket.on("webrtc:ice",async d=>{try{if(pc&&d.candidate)await pc.addIceCandidate(new RTCIceCandidate(d.candidate))}catch(e){}});
+ socket.on("account:replaced",()=>{enableCall(false);status("این ایمیل در دستگاه دیگری وارد شده است.")});
+ socket.on("disconnect",()=>{enableCall(false);status("اتصال به سرور قطع شد؛ در حال تلاش برای اتصال مجدد...")});
+ socket.on("connect",()=>{if(myEmail)socket.emit("register",{email:myEmail},r=>{if(r.ok)enableCall(true)})});
+})();
+</script>
+</body>
+</html>
